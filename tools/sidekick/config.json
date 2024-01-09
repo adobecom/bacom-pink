@@ -31,7 +31,7 @@
       "id": "localize-2",
       "title": "Localize (V2)",
       "environments": [ "edit" ],
-      "url": "https://main--bacom--adobecom.hlx.page/tools/loc?milolibs=locui",
+      "url": "https://main--bacom-pink--adobecom.hlx.page/tools/loc?milolibs=locui",
       "passReferrer": true,
       "passConfig": true,
       "includePaths": [ "**.xlsx**" ]
