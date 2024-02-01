@@ -148,12 +148,17 @@ const eagerLoad = (img) => {
 };
 
 (async function loadLCPImage() {
-  const marquee = document.querySelector('.marquee.split');
-  if (marquee) {
-    marquee.querySelectorAll('img').forEach(eagerLoad);
-  } else {
+  const marquee = document.querySelector('.marquee');
+  if (!marquee) {
     eagerLoad(document.querySelector('img'));
+    return;
   }
+
+  if (marquee.classList.contains('split')) {
+    marquee.querySelectorAll('img').forEach(eagerLoad);
+    return;
+  }
+  eagerLoad(marquee.querySelector('img'));
 }());
 
 /*
@@ -189,6 +194,11 @@ const miloLibs = setLibs(LIBS);
     }
   }
   setConfig({ ...CONFIG, miloLibs });
-  loadLana({ clientId: 'bacom' });
+  loadLana({ clientId: 'bacom', tags: 'info' });
   await loadArea();
+
+  if (document.querySelector('meta[name="aa-university"]')) {
+    const { default: registerAAUniversity } = await import('./aa-university.js');
+    window.addEventListener('mktoSubmit', registerAAUniversity);
+  }
 }());
