@@ -1,19 +1,7 @@
-/*
- * Copyright 2022 Adobe. All rights reserved.
- * This file is licensed to you under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- * OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- */
-
 import { setLibs } from './utils.js';
 
 const LIBS = '/libs';
-const STYLES = ['/styles/styles.css', '/styles/faas.css'];
+const STYLES = ['/styles/styles.css'];
 const CONFIG = {
   imsClientId: 'bacom',
   local: {
@@ -140,6 +128,7 @@ const CONFIG = {
     /business\.adobe\.com\/(\w\w(_\w\w)?\/)?blog(\/.*)?/,
   ],
   useDotHtml: true,
+  dynamicNavKey: 'bacom',
 };
 
 const eagerLoad = (img) => {
@@ -147,20 +136,26 @@ const eagerLoad = (img) => {
   img?.setAttribute('fetchpriority', 'high');
 };
 
-(async function loadLCPImage() {
-  const marquee = document.querySelector('.marquee.split');
-  if (marquee) {
-    marquee.querySelectorAll('img').forEach(eagerLoad);
-  } else {
-    eagerLoad(document.querySelector('img'));
-  }
-}());
+const loadStyle = (path) => {
+  const link = document.createElement('link');
+  link.setAttribute('rel', 'stylesheet');
+  link.setAttribute('href', path);
+  document.head.appendChild(link);
+};
 
-/*
- * ------------------------------------------------------------
- * Edit below at your own risk
- * ------------------------------------------------------------
- */
+(async function loadLCPImage() {
+  const marquee = document.querySelector('.marquee');
+  if (!marquee) {
+    eagerLoad(document.querySelector('img'));
+    return;
+  }
+
+  if (marquee.classList.contains('split')) {
+    marquee.querySelectorAll('img').forEach(eagerLoad);
+    return;
+  }
+  eagerLoad(marquee.querySelector('img'));
+}());
 
 const miloLibs = setLibs(LIBS);
 
@@ -169,16 +164,12 @@ const miloLibs = setLibs(LIBS);
   if (STYLES) {
     paths.push(...(Array.isArray(STYLES) ? STYLES : [STYLES]));
   }
-  paths.forEach((path) => {
-    const link = document.createElement('link');
-    link.setAttribute('rel', 'stylesheet');
-    link.setAttribute('href', path);
-    document.head.appendChild(link);
-  });
+  paths.forEach(loadStyle);
 }());
 
 (async function loadPage() {
-  const { loadArea, loadLana, setConfig, createTag } = await import(`${miloLibs}/utils/utils.js`);
+  const { loadArea, loadLana, setConfig, createTag, getMetadata } = await import(`${miloLibs}/utils/utils.js`);
+  if (getMetadata('template') === '404') window.SAMPLE_PAGEVIEWS_AT_RATE = 'high';
   const metaCta = document.querySelector('meta[name="chat-cta"]');
   if (metaCta && !document.querySelector('.chat-cta')) {
     const isMetaCtaDisabled = metaCta?.content === 'off';
@@ -189,6 +180,14 @@ const miloLibs = setLibs(LIBS);
     }
   }
   setConfig({ ...CONFIG, miloLibs });
-  loadLana({ clientId: 'bacom' });
+  loadLana({ clientId: 'bacom', tags: 'info' });
   await loadArea();
+
+  if (document.querySelector('meta[name="aa-university"]')) {
+    const { default: registerAAUniversity } = await import('./aa-university.js');
+    window.addEventListener('mktoSubmit', registerAAUniversity);
+  }
+  if (document.querySelector('.faas')) {
+    loadStyle('/styles/faas.css');
+  }
 }());
